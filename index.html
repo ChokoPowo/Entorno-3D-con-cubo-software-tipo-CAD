@@ -309,11 +309,8 @@
             reader.onload = function (event) {
                 const loader = new THREE.STLLoader();
                 const geometry = loader.parse(event.target.result);
-               // --- PRUEBA ESTA COMBINACIÓN EXACTA ---
-    geometry.rotateX(Math.PI / 2);
-    // Si estaba de espaldas, cambiamos el giro horizontal a cero o a un cuarto de vuelta:
-    // O bien probamos rotando en Y con un ángulo positivo/negativo:
-    geometry.rotateY(0); // O elimina la línea de rotación Y y usa solo la X si ya se paró bien
+               geometry.rotateX(-Math.PI / 2);
+    geometry.rotateY(Math.PI);
                 
                 // 1. Centrar la geometría en su propio origen
                 geometry.computeBoundingBox();
