@@ -309,7 +309,8 @@
             reader.onload = function (event) {
                 const loader = new THREE.STLLoader();
                 const geometry = loader.parse(event.target.result);
-                geometry.rotateX(Math.PI);
+                geometry.rotateX(-Math.PI / 2);
+    geometry.rotateY(Math.PI); // Esto le da la vuelta correcta al frente
                 
                 // 1. Centrar la geometría en su propio origen
                 geometry.computeBoundingBox();
