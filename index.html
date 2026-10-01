@@ -151,19 +151,7 @@
         scene.add(rimLight);
 
         // Ancient Floor Platform
-        const floorGeo = new THREE.CylinderGeometry(5, 5.5, 0.4, 32);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8, metalness: 0.2 });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.position.y = -0.2;
-        floor.receiveShadow = true;
-        scene.add(floor);
-
-        const ringGeo = new THREE.RingGeometry(3.5, 3.65, 32);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0x2563eb, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.01;
-        scene.add(ring);
+        
 
         // Contenedor principal del modelo activo (Caballero o STL)
         const activeModelGroup = new THREE.Group();
@@ -360,7 +348,7 @@
 
                 const stlContainerGroup = new THREE.Group();
                 stlContainerGroup.add(stlMesh);
-                stlContainerGroup.position.y = 1.0; // Centrado sobre la plataforma
+                stlContainerGroup.position.y = 0.0; // Centrado sobre la plataforma
                 activeModelGroup.add(stlContainerGroup);
 
                 currentModelType = 'stl';
@@ -369,7 +357,7 @@
                 modelDesc.textContent = `Modelo CAD normalizado y escalado automáticamente a la vista.`;
 
                 // 3. Ajustar la cámara cómodamente al nuevo tamaño estandarizado
-                controls.target.set(0, 1.0, 0);
+                controls.target.set(0, 0, 0);
                 camera.position.set(0, 2.5, 7);
                 controls.update();
             };
