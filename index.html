@@ -309,7 +309,7 @@
             reader.onload = function (event) {
                 const loader = new THREE.STLLoader();
                 const geometry = loader.parse(event.target.result);
-                geometry.rotateX(-Math.PI / 2);
+                geometry.rotateX(Math.PI / 2);
     geometry.rotateZ(Math.PI); // Esto endereza la inclinación hacia atrás
                 
                 // 1. Centrar la geometría en su propio origen
