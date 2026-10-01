@@ -322,9 +322,25 @@
                 const loader = new THREE.STLLoader();
                 const geometry = loader.parse(event.target.result);
                 
-                // Centrar la geometría STL en su origen
+                // 1. Centrar la geometría en su propio origen
                 geometry.computeBoundingBox();
                 geometry.center();
+
+                // 2. AUTO-ESCALADO INTELIGENTE: Forzar que cualquier modelo quepa en un tamaño estándar (ej. radio de 2.5 unidades)
+                geometry.computeBoundingSphere();
+                const sphere = geometry.boundingSphere;
+                const maxDim = Math.max(
+                    geometry.boundingBox.max.x - geometry.boundingBox.min.x,
+                    geometry.boundingBox.max.y - geometry.boundingBox.min.y,
+                    geometry.boundingBox.max.z - geometry.boundingBox.min.z
+                );
+                
+                // Si el modelo es muy grande o muy chico, lo normalizamos a una escala cómoda (~3 unidades)
+                const targetSize = 3.0;
+                if (maxDim > 0) {
+                    const scaleFactor = targetSize / maxDim;
+                    geometry.scale(scaleFactor, scaleFactor, scaleFactor);
+                }
 
                 const material = new THREE.MeshStandardMaterial({
                     color: 0x3b82f6,
@@ -337,29 +353,24 @@
                 stlMesh.castShadow = true;
                 stlMesh.receiveShadow = true;
 
-                // Limpiar escena activa y colocar el nuevo STL
+                // Limpiar escena activa
                 while(activeModelGroup.children.length > 0){ 
                     activeModelGroup.remove(activeModelGroup.children[0]); 
                 }
 
                 const stlContainerGroup = new THREE.Group();
                 stlContainerGroup.add(stlMesh);
-                // Elevar un poco sobre el piso
-                stlContainerGroup.position.y = 1.0;
+                stlContainerGroup.position.y = 1.0; // Centrado sobre la plataforma
                 activeModelGroup.add(stlContainerGroup);
 
                 currentModelType = 'stl';
                 resetKnightBtn.classList.remove('hidden');
                 modelTitle.textContent = `STL: ${file.name}`;
-                modelDesc.textContent = `Archivo CAD cargado exitosamente. Puedes rotar, hacer zoom y usar el ViewCube con normalidad.`;
+                modelDesc.textContent = `Modelo CAD normalizado y escalado automáticamente a la vista.`;
 
-                // Ajustar cámara al tamaño del objeto STL cargado
-                geometry.computeBoundingSphere();
-                const sphere = geometry.boundingSphere;
-                const radius = sphere.radius;
-                
+                // 3. Ajustar la cámara cómodamente al nuevo tamaño estandarizado
                 controls.target.set(0, 1.0, 0);
-                camera.position.set(0, 1.0 + radius * 2.5, radius * 3.5);
+                camera.position.set(0, 2.5, 7);
                 controls.update();
             };
         });
