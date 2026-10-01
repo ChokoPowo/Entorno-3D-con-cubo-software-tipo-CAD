@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hollow Knight CAD ViewCube Viewer</title>
+    <title>Hollow Knight CAD ViewCube Viewer + STL Uploader</title>
     <!-- Tailwind CSS for modern responsive UI -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Three.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- OrbitControls for main viewport -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- STLLoader for custom STL files -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
     <!-- TWEEN for smooth camera transitions -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f3f4f6; overflow: hidden; }
-        /* Custom scrollbar for info panel */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
         ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.5); border-radius: 3px; }
@@ -31,6 +32,18 @@
             <h1 class="text-lg font-bold tracking-wider text-slate-100 glow-text">HALLOWNEST // CAD VIEWCUBE</h1>
         </div>
         <div class="flex items-center space-x-3">
+            <!-- Nuevo Botón para Subir STL -->
+            <label class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-emerald-500/20 transition cursor-pointer flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <span>Cargar STL</span>
+                <input type="file" id="stlInput" accept=".stl" class="hidden">
+            </label>
+
+            <!-- Botón para volver al Caballero -->
+            <button id="resetKnightBtn" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-lg border border-slate-700 transition shadow-sm hidden">
+                Ver Caballero
+            </button>
+
             <button id="infoBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-lg border border-slate-700 transition shadow-sm flex items-center space-x-2">
                 <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span>GitHub & Info</span>
@@ -54,12 +67,12 @@
         </div>
 
         <!-- HUD Overlay / Legend (Bottom Left) -->
-        <div class="absolute bottom-6 left-6 z-20 bg-slate-900/80 backdrop-blur-md p-4 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-xl max-w-xs">
+        <div id="hudInfo" class="absolute bottom-6 left-6 z-20 bg-slate-900/80 backdrop-blur-md p-4 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-xl max-w-xs">
             <div class="font-semibold text-slate-200 mb-1 flex items-center space-x-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Modelo Procedural: El Caballero</span>
+                <span id="modelTitle">Modelo Procedural: El Caballero</span>
             </div>
-            <p class="text-slate-400 leading-relaxed">Incluye cabeza icónica con cuernos simétricos, máscara negra con ojos ovalados, capa ondeante y aguijón estilizado de Hallownest.</p>
+            <p id="modelDesc" class="text-slate-400 leading-relaxed">Incluye cabeza icónica con cuernos simétricos, máscara negra con ojos ovalados, capa ondeante y aguijón estilizado de Hallownest.</p>
         </div>
     </main>
 
@@ -73,14 +86,12 @@
                 <span>Cómo subir a GitHub y GitHub Pages</span>
             </h2>
             <div class="space-y-3 text-sm text-slate-300">
-                <p>Este archivo único <code class="bg-slate-800 px-2 py-1 rounded text-blue-300 font-mono">index.html</code> contiene toda la aplicación de Three.js, shaders, estilos y el ViewCube CAD interactivo.</p>
+                <p>Este archivo único <code class="bg-slate-800 px-2 py-1 rounded text-blue-300 font-mono">index.html</code> contiene la aplicación de Three.js, shaders, el ViewCube CAD y el cargador de archivos STL.</p>
                 <ol class="list-decimal list-inside space-y-2 text-slate-300">
-                    <li>Crea un repositorio nuevo en <strong class="text-white">GitHub</strong> (por ejemplo: <code class="text-blue-300 font-mono">hollow-knight-cad</code>).</li>
-                    <li>Sube este archivo renombrado estrictamente como <code class="text-white font-mono">index.html</code> en la rama principal (<code class="text-white font-mono">main</code>).</li>
-                    <li>Ve a la pestaña <strong class="text-white">Settings</strong> de tu repositorio de GitHub.</li>
-                    <li>Entra a la sección <strong class="text-white">Pages</strong> en el menú lateral izquierdo.</li>
-                    <li>En <em>Build and deployment</em>, selecciona la rama <code class="text-white font-mono">main</code> y la carpeta root <code class="text-white font-mono">/ (root)</code>, luego haz clic en <strong class="text-white">Save</strong>.</li>
-                    <li>¡Listo! En un minuto GitHub te dará el link web público para mostrárselo a tu profesor.</li>
+                    <li>Crea un repositorio nuevo en <strong class="text-white">GitHub</strong>.</li>
+                    <li>Sube este archivo como <code class="text-white font-mono">index.html</code> en la rama principal (<code class="text-white font-mono">main</code>).</li>
+                    <li>Ve a la pestaña <strong class="text-white">Settings</strong> &gt; <strong class="text-white">Pages</strong>.</li>
+                    <li>Selecciona la rama <code class="text-white font-mono">main</code> y carpeta root <code class="text-white font-mono">/ (root)</code>, luego <strong class="text-white">Save</strong>.</li>
                 </ol>
             </div>
             <div class="mt-6 flex justify-end">
@@ -120,9 +131,9 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
-        controls.maxPolarAngle = Math.PI / 2 + 0.1; // Don't go too far below ground
-        controls.minDistance = 3;
-        controls.maxDistance = 20;
+        controls.maxPolarAngle = Math.PI / 2 + 0.1; 
+        controls.minDistance = 1;
+        controls.maxDistance = 100;
 
         // --- HALLOWNEST ATMOSPHERIC LIGHTING ---
         const ambientLight = new THREE.AmbientLight(0x1e293b, 1.2);
@@ -139,10 +150,6 @@
         rimLight.position.set(-5, 4, -5);
         scene.add(rimLight);
 
-        const floorLight = new THREE.PointLight(0x3b82f6, 1.5, 10);
-        floorLight.position.set(0, 0.5, 0);
-        scene.add(floorLight);
-
         // Ancient Floor Platform
         const floorGeo = new THREE.CylinderGeometry(5, 5.5, 0.4, 32);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8, metalness: 0.2 });
@@ -151,7 +158,6 @@
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // Floor rune ring
         const ringGeo = new THREE.RingGeometry(3.5, 3.65, 32);
         const ringMat = new THREE.MeshBasicMaterial({ color: 0x2563eb, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
         const ring = new THREE.Mesh(ringGeo, ringMat);
@@ -159,165 +165,220 @@
         ring.position.y = 0.01;
         scene.add(ring);
 
-        // --- PROCEDURAL 3D MODEL: THE KNIGHT (HOLLOW KNIGHT) ---
-        const knightGroup = new THREE.Group();
-        scene.add(knightGroup);
+        // Contenedor principal del modelo activo (Caballero o STL)
+        const activeModelGroup = new THREE.Group();
+        scene.add(activeModelGroup);
 
-        // Materials
-        const whiteMaskMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3, metalness: 0.1 });
-        const darkBodyMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9, metalness: 0.1 });
-        const cloakMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7, side: THREE.DoubleSide });
-        const nailMat = new THREE.MeshStandardMaterial({ color: 0xcfd8dc, roughness: 0.2, metalness: 0.8 });
-        const blackEyeMat = new THREE.MeshBasicMaterial({ color: 0x020617 });
+        let currentModelType = 'knight'; // 'knight' o 'stl'
+        let knightGroup, cloakRef;
 
-        // 1. Head & Horns
-        const headGeo = new THREE.SphereGeometry(0.7, 32, 32);
-        headGeo.scale(1, 0.85, 0.8);
-        const head = new THREE.Mesh(headGeo, whiteMaskMat);
-        head.position.y = 1.6;
-        head.castShadow = true;
-        knightGroup.add(head);
+        // --- PROCEDURAL 3D MODEL: THE KNIGHT ---
+        function createKnightModel() {
+            knightGroup = new THREE.Group();
 
-        // Eyes (hollow black oval depressions)
-        const eyeGeo = new THREE.SphereGeometry(0.18, 16, 16);
-        eyeGeo.scale(0.6, 1.5, 0.5);
+            const whiteMaskMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3, metalness: 0.1 });
+            const darkBodyMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9, metalness: 0.1 });
+            const cloakMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7, side: THREE.DoubleSide });
+            const nailMat = new THREE.MeshStandardMaterial({ color: 0xcfd8dc, roughness: 0.2, metalness: 0.8 });
+            const blackEyeMat = new THREE.MeshBasicMaterial({ color: 0x020617 });
 
-        const leftEye = new THREE.Mesh(eyeGeo, blackEyeMat);
-        leftEye.position.set(-0.25, 1.65, 0.52);
-        leftEye.rotation.y = -0.15;
-        knightGroup.add(leftEye);
+            // Head & Horns
+            const headGeo = new THREE.SphereGeometry(0.7, 32, 32);
+            headGeo.scale(1, 0.85, 0.8);
+            const head = new THREE.Mesh(headGeo, whiteMaskMat);
+            head.position.y = 1.6;
+            head.castShadow = true;
+            knightGroup.add(head);
 
-        const rightEye = new THREE.Mesh(eyeGeo, blackEyeMat);
-        rightEye.position.set(0.25, 1.65, 0.52);
-        rightEye.rotation.y = 0.15;
-        knightGroup.add(rightEye);
+            const eyeGeo = new THREE.SphereGeometry(0.18, 16, 16);
+            eyeGeo.scale(0.6, 1.5, 0.5);
 
-        // Horns (Iconic curved antenna-like horns)
-        const createHorn = (isLeft) => {
-            const hornGroup = new THREE.Group();
-            const curve = new THREE.CubicBezierCurve3(
-                new THREE.Vector3(0, 0, 0),
-                new THREE.Vector3(isLeft ? -0.5 : 0.5, 0.8, 0),
-                new THREE.Vector3(isLeft ? -1.2 : 1.2, 1.8, 0),
-                new THREE.Vector3(isLeft ? -1.4 : 1.4, 2.2, 0.1)
-            );
-            const tubeGeo = new THREE.TubeGeometry(curve, 20, 0.12, 12, false);
-            const hornMesh = new THREE.Mesh(tubeGeo, whiteMaskMat);
-            hornMesh.castShadow = true;
-            hornGroup.add(hornMesh);
+            const leftEye = new THREE.Mesh(eyeGeo, blackEyeMat);
+            leftEye.position.set(-0.25, 1.65, 0.52);
+            leftEye.rotation.y = -0.15;
+            knightGroup.add(leftEye);
 
-            // Horn tip cut detail
-            const tipGeo = new THREE.CylinderGeometry(0.1, 0.12, 0.2, 8);
-            const tipMesh = new THREE.Mesh(tipGeo, whiteMaskMat);
-            tipMesh.position.set(isLeft ? -1.4 : 1.4, 2.2, 0.1);
-            tipMesh.rotation.z = isLeft ? 0.5 : -0.5;
-            hornGroup.add(tipMesh);
+            const rightEye = new THREE.Mesh(eyeGeo, blackEyeMat);
+            rightEye.position.set(0.25, 1.65, 0.52);
+            rightEye.rotation.y = 0.15;
+            knightGroup.add(rightEye);
 
-            return hornGroup;
-        };
+            const createHorn = (isLeft) => {
+                const hornGroup = new THREE.Group();
+                const curve = new THREE.CubicBezierCurve3(
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(isLeft ? -0.5 : 0.5, 0.8, 0),
+                    new THREE.Vector3(isLeft ? -1.2 : 1.2, 1.8, 0),
+                    new THREE.Vector3(isLeft ? -1.4 : 1.4, 2.2, 0.1)
+                );
+                const tubeGeo = new THREE.TubeGeometry(curve, 20, 0.12, 12, false);
+                const hornMesh = new THREE.Mesh(tubeGeo, whiteMaskMat);
+                hornMesh.castShadow = true;
+                hornGroup.add(hornMesh);
+                return hornGroup;
+            };
 
-        const leftHorn = createHorn(true);
-        leftHorn.position.set(-0.3, 2.1, 0);
-        knightGroup.add(leftHorn);
+            const leftHorn = createHorn(true);
+            leftHorn.position.set(-0.3, 2.1, 0);
+            knightGroup.add(leftHorn);
 
-        const rightHorn = createHorn(false);
-        rightHorn.position.set(0.3, 2.1, 0);
-        knightGroup.add(rightHorn);
+            const rightHorn = createHorn(false);
+            rightHorn.position.set(0.3, 2.1, 0);
+            knightGroup.add(rightHorn);
 
-        // 2. Body / Torso
-        const bodyGeo = new THREE.ConeGeometry(0.5, 1.1, 16);
-        bodyGeo.scale(1, 1, 0.7);
-        const body = new THREE.Mesh(bodyGeo, darkBodyMat);
-        body.position.y = 0.85;
-        body.castShadow = true;
-        knightGroup.add(body);
+            const bodyGeo = new THREE.ConeGeometry(0.5, 1.1, 16);
+            bodyGeo.scale(1, 1, 0.7);
+            const body = new THREE.Mesh(bodyGeo, darkBodyMat);
+            body.position.y = 0.85;
+            body.castShadow = true;
+            knightGroup.add(body);
 
-        // 3. Cloak (Ondeante / Flowing cape)
-        const cloakShape = new THREE.Shape();
-        cloakShape.moveTo(-0.5, 1.3);
-        cloakShape.bezierCurveTo(-1.2, 1.0, -1.4, 0.2, -0.9, -0.3);
-        cloakShape.bezierCurveTo(-0.6, -0.1, -0.2, 0.2, 0, 0.4);
-        cloakShape.bezierCurveTo(0.2, 0.2, 0.6, -0.1, 0.9, -0.3);
-        cloakShape.bezierCurveTo(1.4, 0.2, 1.2, 1.0, 0.5, 1.3);
-        cloakShape.closePath();
+            // Cloak
+            const cloakShape = new THREE.Shape();
+            cloakShape.moveTo(-0.5, 1.3);
+            cloakShape.bezierCurveTo(-1.2, 1.0, -1.4, 0.2, -0.9, -0.3);
+            cloakShape.bezierCurveTo(-0.6, -0.1, -0.2, 0.2, 0, 0.4);
+            cloakShape.bezierCurveTo(0.2, 0.2, 0.6, -0.1, 0.9, -0.3);
+            cloakShape.bezierCurveTo(1.4, 0.2, 1.2, 1.0, 0.5, 1.3);
+            cloakShape.closePath();
 
-        const extrudeSettings = { depth: 0.15, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.05, bevelThickness: 0.05 };
-        const cloakGeo = new THREE.ExtrudeGeometry(cloakShape, extrudeSettings);
-        cloakGeo.center();
-        const cloak = new THREE.Mesh(cloakGeo, cloakMat);
-        cloak.position.set(0, 0.9, -0.1);
-        cloak.rotation.x = 0.2;
-        cloak.castShadow = true;
-        knightGroup.add(cloak);
+            const extrudeSettings = { depth: 0.15, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.05, bevelThickness: 0.05 };
+            const cloakGeo = new THREE.ExtrudeGeometry(cloakShape, extrudeSettings);
+            cloakGeo.center();
+            const cloak = new THREE.Mesh(cloakGeo, cloakMat);
+            cloak.position.set(0, 0.9, -0.1);
+            cloak.rotation.x = 0.2;
+            cloak.castShadow = true;
+            knightGroup.add(cloak);
+            cloakRef = cloak;
 
-        // 4. Legs / Stumps
-        const legGeo = new THREE.SphereGeometry(0.18, 16, 16);
-        legGeo.scale(1, 1.5, 1);
-        
-        const leftLeg = new THREE.Mesh(legGeo, darkBodyMat);
-        leftLeg.position.set(-0.2, 0.25, 0);
-        knightGroup.add(leftLeg);
+            const legGeo = new THREE.SphereGeometry(0.18, 16, 16);
+            legGeo.scale(1, 1.5, 1);
+            const leftLeg = new THREE.Mesh(legGeo, darkBodyMat);
+            leftLeg.position.set(-0.2, 0.25, 0);
+            knightGroup.add(leftLeg);
+            const rightLeg = new THREE.Mesh(legGeo, darkBodyMat);
+            rightLeg.position.set(0.2, 0.25, 0);
+            knightGroup.add(rightLeg);
 
-        const rightLeg = new THREE.Mesh(legGeo, darkBodyMat);
-        rightLeg.position.set(0.2, 0.25, 0);
-        knightGroup.add(rightLeg);
+            // Nail
+            const nailGroup = new THREE.Group();
+            const handleGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 12);
+            const handle = new THREE.Mesh(handleGeo, darkBodyMat);
+            handle.rotation.z = Math.PI / 4;
+            nailGroup.add(handle);
 
-        // 5. The Nail (El Aguijón clásico)
-        const nailGroup = new THREE.Group();
-        
-        // Hilt & Handle
-        const handleGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 12);
-        const handle = new THREE.Mesh(handleGeo, darkBodyMat);
-        handle.rotation.z = Math.PI / 4;
-        nailGroup.add(handle);
+            const bladeShape = new THREE.Shape();
+            bladeShape.moveTo(0, 0);
+            bladeShape.lineTo(0.25, 1.4);
+            bladeShape.lineTo(0, 1.8);
+            bladeShape.lineTo(-0.25, 1.4);
+            bladeShape.closePath();
 
-        // Guard
-        const guardGeo = new THREE.BoxGeometry(0.4, 0.08, 0.15);
-        const guard = new THREE.Mesh(guardGeo, darkBodyMat);
-        guard.position.set(0.25, 0.25, 0);
-        guard.rotation.z = Math.PI / 4;
-        nailGroup.add(guard);
+            const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, { depth: 0.08, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02 });
+            const blade = new THREE.Mesh(bladeGeo, nailMat);
+            blade.position.set(0.25, 0.25, -0.04);
+            blade.rotation.z = Math.PI / 4;
+            blade.castShadow = true;
+            nailGroup.add(blade);
 
-        // Blade (Broad tapered nail blade)
-        const bladeShape = new THREE.Shape();
-        bladeShape.moveTo(0, 0);
-        bladeShape.lineTo(0.25, 1.4);
-        bladeShape.lineTo(0, 1.8);
-        bladeShape.lineTo(-0.25, 1.4);
-        bladeShape.closePath();
+            nailGroup.position.set(0.8, 0.6, 0.3);
+            nailGroup.rotation.z = -0.2;
+            knightGroup.add(nailGroup);
 
-        const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, { depth: 0.08, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02 });
-        const blade = new THREE.Mesh(bladeGeo, nailMat);
-        blade.position.set(0.25, 0.25, -0.04);
-        blade.rotation.z = Math.PI / 4;
-        blade.castShadow = true;
-        nailGroup.add(blade);
+            activeModelGroup.add(knightGroup);
+        }
 
-        nailGroup.position.set(0.8, 0.6, 0.3);
-        nailGroup.rotation.z = -0.2;
-        knightGroup.add(nailGroup);
+        createKnightModel();
 
-        // Subtle ambient dust particles floating in Hallownest atmosphere
+        // Partículas de polvo atmosférico
         const particleCount = 100;
         const particleGeo = new THREE.BufferGeometry();
         const particlePositions = new Float32Array(particleCount * 3);
-
         for (let i = 0; i < particleCount * 3; i += 3) {
-            particlePositions[i] = (Math.random() - 0.5) * 12;     // x
-            particlePositions[i + 1] = Math.random() * 6;          // y
-            particlePositions[i + 2] = (Math.random() - 0.5) * 12; // z
+            particlePositions[i] = (Math.random() - 0.5) * 12;
+            particlePositions[i + 1] = Math.random() * 6;
+            particlePositions[i + 2] = (Math.random() - 0.5) * 12;
         }
         particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-        
-        const particleMat = new THREE.PointsMaterial({
-            color: 0x93c5fd,
-            size: 0.04,
-            transparent: true,
-            opacity: 0.5,
-            blending: THREE.AdditiveBlending
-        });
+        const particleMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.04, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
         const dustParticles = new THREE.Points(particleGeo, particleMat);
         scene.add(dustParticles);
+
+
+        // --- CARGADOR DE ARCHIVOS STL ---
+        const stlInput = document.getElementById('stlInput');
+        const resetKnightBtn = document.getElementById('resetKnightBtn');
+        const modelTitle = document.getElementById('modelTitle');
+        const modelDesc = document.getElementById('modelDesc');
+
+        stlInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onload = function (event) {
+                const loader = new THREE.STLLoader();
+                const geometry = loader.parse(event.target.result);
+                
+                // Centrar la geometría STL en su origen
+                geometry.computeBoundingBox();
+                geometry.center();
+
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x3b82f6,
+                    roughness: 0.4,
+                    metalness: 0.3,
+                    side: THREE.DoubleSide
+                });
+
+                const stlMesh = new THREE.Mesh(geometry, material);
+                stlMesh.castShadow = true;
+                stlMesh.receiveShadow = true;
+
+                // Limpiar escena activa y colocar el nuevo STL
+                while(activeModelGroup.children.length > 0){ 
+                    activeModelGroup.remove(activeModelGroup.children[0]); 
+                }
+
+                const stlContainerGroup = new THREE.Group();
+                stlContainerGroup.add(stlMesh);
+                // Elevar un poco sobre el piso
+                stlContainerGroup.position.y = 1.0;
+                activeModelGroup.add(stlContainerGroup);
+
+                currentModelType = 'stl';
+                resetKnightBtn.classList.remove('hidden');
+                modelTitle.textContent = `STL: ${file.name}`;
+                modelDesc.textContent = `Archivo CAD cargado exitosamente. Puedes rotar, hacer zoom y usar el ViewCube con normalidad.`;
+
+                // Ajustar cámara al tamaño del objeto STL cargado
+                geometry.computeBoundingSphere();
+                const sphere = geometry.boundingSphere;
+                const radius = sphere.radius;
+                
+                controls.target.set(0, 1.0, 0);
+                camera.position.set(0, 1.0 + radius * 2.5, radius * 3.5);
+                controls.update();
+            };
+        });
+
+        // Botón para volver al Caballero Procedural
+        resetKnightBtn.addEventListener('click', () => {
+            while(activeModelGroup.children.length > 0){ 
+                activeModelGroup.remove(activeModelGroup.children[0]); 
+            }
+            createKnightModel();
+            currentModelType = 'knight';
+            resetKnightBtn.classList.add('hidden');
+            modelTitle.textContent = "Modelo Procedural: El Caballero";
+            modelDesc.textContent = "Incluye cabeza icónica con cuernos simétricos, máscara negra con ojos ovalados, capa ondeante y aguijón estilizado de Hallownest.";
+            
+            camera.position.set(0, 2, 8);
+            controls.target.set(0, 1, 0);
+            controls.update();
+        });
 
 
         // --- CAD VIEWCUBE SETUP (BOTTOM RIGHT) ---
@@ -337,11 +398,8 @@
         vcLight.position.set(5, 10, 7);
         vcScene.add(vcLight);
 
-        // Create CAD ViewCube geometry with bevels/trimmed corners (Chamfered Cube)
-        // In Three.js we can create a box and custom materials for each face, edge, and corner.
-        const vcObjects = []; // Raycast targets
+        const vcObjects = [];
 
-        // Helper to create canvas texture for cube faces with text
         function createFaceTexture(text, bgColor = '#1e293b', textColor = '#f8fafc') {
             const canvas = document.createElement('canvas');
             canvas.width = 256;
@@ -350,7 +408,6 @@
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, 256, 256);
             
-            // Border
             ctx.strokeStyle = '#3b82f6';
             ctx.lineWidth = 12;
             ctx.strokeRect(6, 6, 244, 244);
@@ -364,7 +421,6 @@
             return new THREE.CanvasTexture(canvas);
         }
 
-        // Main Cube with Chamfered corners (CAD Style ViewCube)
         const cubeGroup = new THREE.Group();
         vcScene.add(cubeGroup);
 
@@ -377,13 +433,11 @@
             { name: 'LEFT', text: 'LEFT', pos: [-1.01, 0, 0], rot: [0, -Math.PI / 2, 0], normal: new THREE.Vector3(-1, 0, 0) },
         ];
 
-        // Center core
         const coreGeo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
         const coreMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
         const coreMesh = new THREE.Mesh(coreGeo, coreMat);
         cubeGroup.add(coreMesh);
 
-        // Add 6 Faces
         faceConfig.forEach(fc => {
             const tex = createFaceTexture(fc.text);
             const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
@@ -396,11 +450,8 @@
             vcObjects.push(mesh);
         });
 
-        // Add Chamfered Corners and Edges representation for authentic CAD feel
-        // Edges/Corners interactive proxies
         const cornerGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
         const cornerMat = new THREE.MeshBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.9 });
-        
         const offset = 0.85;
         const cornerPositions = [
             [offset, offset, offset], [-offset, offset, offset], [offset, -offset, offset], [-offset, -offset, offset],
@@ -426,36 +477,23 @@
 
             const startPos = camera.position.clone();
             const startTarget = controls.target.clone();
-
-            // Calculate distance to maintain current zoom radius if desired, or fixed distance
             const distance = startPos.distanceTo(startTarget);
             
-            // Normalized target position at same distance
             const dir = targetPosition.clone().sub(targetLookAt).normalize();
             const finalPos = targetLookAt.clone().add(dir.multiplyScalar(distance));
 
-            // Tween position
-            new TWEEN.Tween({
-                px: startPos.x, py: startPos.y, pz: startPos.z,
-                tx: startTarget.x, ty: startTarget.y, tz: startTarget.z
-            })
-            .to({
-                px: finalPos.x, py: finalPos.y, pz: finalPos.z,
-                tx: targetLookAt.x, ty: targetLookAt.y, tz: targetLookAt.z
-            }, 600)
+            new TWEEN.Tween({ px: startPos.x, py: startPos.y, pz: startPos.z, tx: startTarget.x, ty: startTarget.y, tz: startTarget.z })
+            .to({ px: finalPos.x, py: finalPos.y, pz: finalPos.z, tx: targetLookAt.x, ty: targetLookAt.y, tz: targetLookAt.z }, 600)
             .easing(TWEEN.Easing.Cubic.Out)
             .onUpdate((obj) => {
                 camera.position.set(obj.px, obj.py, obj.pz);
                 controls.target.set(obj.tx, obj.ty, obj.tz);
                 controls.update();
             })
-            .onComplete(() => {
-                isTransitioning = false;
-            })
+            .onComplete(() => { isTransitioning = false; })
             .start();
         }
 
-        // Handle ViewCube clicks via Raycasting
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
@@ -471,20 +509,19 @@
                 const hit = intersects[0].object;
                 const normal = hit.userData.normal;
                 if (normal) {
-                    // Target position based on normal vector from model center (0,1,0)
-                    const targetPos = new THREE.Vector3(0, 1, 0).add(normal.clone().multiplyScalar(7));
-                    animateCameraTo(targetPos, new THREE.Vector3(0, 1, 0));
+                    const currentLookAt = controls.target.clone();
+                    const distance = camera.position.distanceTo(currentLookAt);
+                    const targetPos = currentLookAt.clone().add(normal.clone().multiplyScalar(distance));
+                    animateCameraTo(targetPos, currentLookAt);
                 }
             }
         });
 
-        // Reset Camera Button
         document.getElementById('resetCamBtn').addEventListener('click', () => {
-            animateCameraTo(new THREE.Vector3(0, 2, 8), new THREE.Vector3(0, 1, 0));
+            const currentLookAt = controls.target.clone();
+            animateCameraTo(currentLookAt.clone().add(new THREE.Vector3(0, 1, 7)), currentLookAt);
         });
 
-
-        // --- WINDOW RESIZE HANDLER ---
         window.addEventListener('resize', () => {
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
@@ -501,24 +538,22 @@
 
             const elapsedTime = clock.getElapsedTime();
 
-            // Subtle floating/breathing animation for The Knight
-            knightGroup.position.y = Math.sin(elapsedTime * 2.5) * 0.06;
-            
-            // Cloak subtle wave
-            cloak.rotation.z = Math.sin(elapsedTime * 3) * 0.04;
+            // Animación flotante solo si está activo El Caballero
+            if (currentModelType === 'knight' && knightGroup) {
+                knightGroup.position.y = Math.sin(elapsedTime * 2.5) * 0.06;
+                if (cloakRef) cloakRef.rotation.z = Math.sin(elapsedTime * 3) * 0.04;
+            }
 
             const positions = dustParticles.geometry.attributes.position.array;
             for (let i = 1; i < positions.length; i += 3) {
-                positions[i] -= 0.003; // Slowly drift down
-                if (positions[i] < 0) positions[i] = 6; // Reset to top
+                positions[i] -= 0.003;
+                if (positions[i] < 0) positions[i] = 6;
             }
             dustParticles.geometry.attributes.position.needsUpdate = true;
 
-            // Sync ViewCube rotation with main camera orientation relative to lookAt
             const camOffset = camera.position.clone().sub(controls.target);
             vcCamera.position.copy(camOffset.normalize().multiplyScalar(4.5));
             vcCamera.lookAt(0, 0, 0);
-            // Counter rotate cube group to face vcCamera correctly
             cubeGroup.quaternion.copy(camera.quaternion).invert();
 
             controls.update();
